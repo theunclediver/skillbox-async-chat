@@ -22,10 +22,10 @@ class ServerProtocol(asyncio.Protocol):
             self.send_message(decoded)
         else:
             if decoded.startswith("login:"):
-                self.login = decoded.replace("login:","")
+                self.login = decoded.replace("login:","").replace("\r\n","")
                 self.transport.write(f"Hello, {self.login}!\n".encode())
             else:
-                self.transport.write("Login is incorrect".encode())
+                self.transport.write("Login is incorrect\n".encode())
 
     def connection_made(self, transport: transports.Transport):
         self.server.clients.append(self)
@@ -50,6 +50,9 @@ class Server:
 
     def build_protocol(self):
         return ServerProtocol(self)
+
+    def list(self):
+        print(self.clients)
 
     async def start(self):
         loop = asyncio.get_running_loop()
