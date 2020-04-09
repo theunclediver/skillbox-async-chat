@@ -22,25 +22,28 @@ class ServerProtocol(asyncio.Protocol):
             self.send_message(decoded)
         else:
             if decoded.startswith("login:"):
-                self.login = decoded.replace("login:","").replace("\r\n","")
-                self.transport.write(f"Hello, {self.login}!\n".encode())
+                self.login = decoded.replace("login:", "").replace("\r\n", "")
+                self.transport.write(
+                    f"Привет, {self.login}!\n".encode()
+                )
             else:
-                self.transport.write("Login is incorrect\n".encode())
+                self.transport.write("Неправильный логин\n".encode())
 
     def connection_made(self, transport: transports.Transport):
         self.server.clients.append(self)
         self.transport = transport
-        print("New user joined")
+        print("Пришел новый клиент")
 
-    def connection_lost(self,exception):
+    def connection_lost(self, exception):
         self.server.clients.remove(self)
-        print("User has gone")
+        print("Клиент вышел")
 
     def send_message(self, content: str):
-        message = f"{self.login}: {content}\n"
+        message = f"{self.login}: {content}"
 
         for user in self.server.clients:
             user.transport.write(message.encode())
+
 
 class Server:
     clients: list
@@ -51,25 +54,23 @@ class Server:
     def build_protocol(self):
         return ServerProtocol(self)
 
-    def list(self):
-        print(self.clients)
-
     async def start(self):
         loop = asyncio.get_running_loop()
 
         coroutine = await loop.create_server(
             self.build_protocol,
             '127.0.0.1',
-            8888,
+            8888
         )
 
-        print("Server is started...")
+        print("Сервер запущен ...")
 
         await coroutine.serve_forever()
+
 
 process = Server()
 
 try:
     asyncio.run(process.start())
 except KeyboardInterrupt:
-    print("\nServer was stopped manualy")
+    print("Сервер остановлен вручную")
